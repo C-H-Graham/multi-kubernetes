@@ -1,0 +1,25 @@
+sudo: required
+language: generic
+
+services: 
+  - docker
+
+before_install: 
+  - docker build -t jobothehobo/react-test -f ./client/Dockerfile.dev ./client
+
+
+script:
+  - docker run -e CI=true jobothehobo/react-test npm test
+
+after_success:
+  - docker build -t jobothehobo/multi-client ./client
+  - docker build -t jobothehobo/multi-nginx ./nginx
+  - docker build -t jobothehobo/multi-server ./server
+  - docker build -t jobothehobo/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  #Take images and push to docker hub
+  - docker push jobothehobo/multi-client
+  - docker push jobothehobo/multi-nginx
+  - docker push jobothehobo/multi-server
+  - docker push jobothehobo/multi-worker
